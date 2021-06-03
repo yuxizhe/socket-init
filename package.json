@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "debug": "DEBUG=* node app.js",
-    "dev": "DEBUG=* nodemon app.js"
+    "dev": "nodemon app.js"
   },
   "repository": {
     "type": "git",
