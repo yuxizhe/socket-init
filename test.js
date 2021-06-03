@@ -36,6 +36,6 @@ io.on('connect', (socket) => {
 });
 
 // 监听端口
-server.listen(3000, () => {
-  console.log('listening on *:3000');
+server.listen(3001, () => {
+  console.log('listening on *:3001');
 });
