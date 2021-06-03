@@ -1,6 +1,7 @@
 const Koa = require("koa");
 const fs = require("fs");
 const Router = require("koa-router");
+const static = require('koa-static');
 
 const app = new Koa();
 const server = require("http").createServer(app.callback());
@@ -8,13 +9,13 @@ const SocketIO = require("socket.io");
 
 const io = SocketIO(server, { origins: "*:*" });
 
-// 首页路由
-const router = new Router();
-router.get("/", (ctx) => {
-  ctx.response.type = "html";
-  ctx.response.body = fs.createReadStream("./index.html");
-});
-app.use(router.routes());
+app.use(static('public'));
+
+// 路由
+// const router = new Router();
+// router.get("/", (ctx) => {
+// });
+// app.use(router.routes());
 
 // socket连接
 io.on("connect", (socket) => {
