@@ -1,10 +1,12 @@
 const Koa = require("koa");
+const fs = require("fs");
+const Router = require("koa-router");
 
 const app = new Koa();
-const Router = require("koa-router");
-const fs = require("fs");
 const server = require("http").createServer(app.callback());
-const io = require("socket.io")(server, { origins: "*:*" });
+const SocketIO = require("socket.io");
+
+const io = SocketIO(server, { origins: "*:*" });
 
 // 首页路由
 const router = new Router();

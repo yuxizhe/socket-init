@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "debug": "DEBUG=* node app.js"
+    "debug": "DEBUG=* node app.js",
+    "dev": "DEBUG=* nodemon app.js"
   },
   "repository": {
     "type": "git",
