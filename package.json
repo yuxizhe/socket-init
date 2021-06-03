@@ -2,10 +2,10 @@
   "name": "socket-test",
   "version": "1.0.0",
   "description": "",
-  "main": "test.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node test.js",
-    "debug": "DEBUG=* node test.js"
+    "start": "node app.js",
+    "debug": "DEBUG=* node app.js"
   },
   "repository": {
     "type": "git",
