@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>socket</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io@4.1.2/client-dist/socket.io.min.js"></script>
+    <div id="app">
+      <div class="border">
+        <div class="list">
+          <p v-for="item in list">{{item}}</p>
+        </div>
+        <div class="bar">
+          <input type="text" v-model="message" placeholder="请输入消息"/>
+          <button @click="sendMessage">发送</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      var socket = io();
+      var app = new Vue({
+        el: "#app",
+        data: {
+          list: ["你好！"],
+          message: "",
+        },
+        mounted() {
+          socket.on("chat message", (msg) => {
+            this.list.push(msg);
+          });
+        },
+        methods: {
+          sendMessage: function () {
+            socket.emit("chat message", this.message);
+            this.message = "";
+          },
+        },
+      });
+    </script>
+    <style>
+      .border {
+        padding: 16px;
+        box-sizing: border-box;
+        border: 1px solid black;
+        height: calc(100vh - 16px);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .list {
+        overflow: auto;
+      }
+      .bar {
+        display: flex;
+      }
+      .bar input {
+        flex: 1;
+      }
+    </style>
+  </body>
+</html>

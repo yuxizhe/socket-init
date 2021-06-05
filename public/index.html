@@ -4,61 +4,152 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>socket</title>
-    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <title>Chat room</title>
   </head>
   <body>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/socket.io@4.1.2/client-dist/socket.io.min.js"></script>
     <div id="app">
-      <div class="border">
-        <div class="list">
-          <p v-for="item in list">{{item}}</p>
+      <div class="bar" v-if="!usernameAlreadySelected">
+        <input
+          type="text"
+          v-model="username"
+          placeholder="请输入你的名字"
+          @keyup.enter="onSetName"
+        />
+        <button @click="onSetName">确认</button>
+      </div>
+      <div v-else>
+        <div class="user-list">
+          当前用户（点击聊天）:
+          <div
+            class="user"
+            :class="{
+              active: (userSelect.userID === user.userID),
+              'user-alert': usersNewAlert[user.userID]
+            }
+            "
+            v-for="user in users"
+            @click="onSelectUser(user)"
+          >
+            {{user.username}}
+          </div>
         </div>
-        <div class="bar">
-          <input type="text" v-model="message" placeholder="请输入消息"/>
-          <button @click="sendMessage">发送</button>
+        <div class="chat-list" v-if='userSelect'>
+          <p
+            v-if="usersMsgList[userSelect.userID]"
+            v-for="item in usersMsgList[userSelect.userID]"
+          >
+            {{userIDs[item.from]}}:{{item.msg}}
+          </p>
+          <div class="bar">
+            <input
+              type="text"
+              v-model="message"
+              placeholder="请输入消息"
+              @keyup.enter="sendMessage"
+            />
+            <button @click="sendMessage">发送</button>
+          </div>
         </div>
       </div>
     </div>
     <script>
-      var socket = io();
+      const socket = io({ autoConnect: false });
+      socket.onAny((event, ...args) => {
+        console.log(event, args);
+      });
       var app = new Vue({
         el: "#app",
         data: {
-          list: ["你好！"],
+          usernameAlreadySelected: false,
+          username: "",
+          userSelect: "",
+          users: [],
+          userIDs: {},
+          usersMsgList: {},
+          usersNewAlert: {},
           message: "",
         },
         mounted() {
+          // 订阅 用户列表
+          socket.on("users", (msg) => {
+            this.users = msg;
+            msg.map(item => this.userIDs[item.userID] = item.username)
+          });
+          // 订阅消息
           socket.on("chat message", (msg) => {
             this.list.push(msg);
           });
+          // 私聊消息
+          socket.on("private message", ({ msg, from }) => {
+            // 消息存储
+            if (!this.usersMsgList[from]) {
+              Vue.set(this.usersMsgList, from, []);
+            }
+            this.usersMsgList[from].push({from,msg});
+            // 消息提醒
+            Vue.set(this.usersNewAlert, from, true);
+          });
+          // 错误处理
+          socket.on("connect_error", (err) => {
+            if (err.message === "invalid username") {
+              alert("请输入用户名");
+              this.usernameAlreadySelected = false;
+            }
+          });
         },
         methods: {
+          onSetName: function () {
+            socket.auth = { username: this.username };
+            // TODO: 成功回调？
+            socket.connect();
+            this.usernameAlreadySelected = true;
+          },
+          onSelectUser: function(user) {
+            this.userSelect = user;
+            this.usersNewAlert[user.userID] = false;
+          },
           sendMessage: function () {
-            socket.emit("chat message", this.message);
+            const to = this.userSelect.userID;
+            const msg = this.message;
+            socket.emit("private message", {
+              msg,
+              to,
+            });
+            // 本地存下
+            if (!this.usersMsgList[to]) {
+              Vue.set(this.usersMsgList, to, []);
+            }
+            this.usersMsgList[to].push({from: socket.id, msg});
+
             this.message = "";
           },
         },
       });
     </script>
     <style>
-      .border {
-        padding: 16px;
-        box-sizing: border-box;
-        border: 1px solid black;
-        height: calc(100vh - 16px);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-      .list {
-        overflow: auto;
-      }
       .bar {
         display: flex;
       }
       .bar input {
         flex: 1;
+      }
+      .chat-list,
+      .user-list {
+        border: 1px solid;
+        margin: 10px 0;
+        padding: 10px;
+      }
+      .user {
+        padding: 5px;
+        cursor: pointer;
+      }
+      .user-alert {
+        background-color: rgba(255, 237, 73, 0.596);
+      }
+      .active {
+        background-color: rgba(100, 196, 55, 0.596);
       }
     </style>
   </body>
